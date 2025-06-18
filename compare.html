@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WANDER - Comparison</title>
+  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="styles/compare.css" />
+  <link rel="icon" href="marker white.png" type="image/x-icon" />
+</head>
+<body>
+  <div class="compare-container">
+    <h2>Profile Comparison</h2>
+    <form class="compare-form" id="compare-form">
+      <div class="inputs">
+        <input type="text" id="user1" placeholder="Your code" required />
+        <input type="text" id="user2" placeholder="Their code" required />
+      </div>
+      <button type="submit">Compare</button>
+    </form>
+    <div id="compare-error" class="compare-error"></div>
+    <div id="compare-result"></div>
+    <a href="index.html" style="margin-top:1.5em;font-size:1em;color:#1976d2;text-decoration:underline;">← Back to Passport</a>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="scripts/compare.js"></script>
+</body>
+</html>
