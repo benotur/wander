@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # WANDER
 
 WANDER is a web application for tracking, visualizing, and comparing your travel history around the world. Users can mark countries they've visited, lived in, or wish to visit, and see their stats visualized on an interactive world map. You can also compare your travel stats with other users and share your "passport" with friends.
@@ -69,3 +70,6 @@ MIT License
 ---
 
 **Enjoy tracking and sharing your travels
+=======
+Demo: https://wander-project.netlify.app/
+>>>>>>> 23f9454ee2d4d2aa3b3cde19860bb8d7a8f758d7
