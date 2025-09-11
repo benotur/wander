@@ -23,10 +23,22 @@
     <button id="open-menu-btn" title="Open menu">
       <i class="fi fi-sr-plus"></i>
     </button>
-    <div id="menu-modal" class="hidden">
-      <div id="menu-sheet">
-        <button id="close-menu-btn">&times;</button>
-        <div id="continent-list"></div>
+    <div id="country-menu-modal" class="country-menu-modal hidden">
+      <div class="country-menu-sheet" id="country-menu-sheet">
+        <div class="country-menu-drag"></div>
+        <div class="country-menu-header">
+          <input type="text" id="country-search" class="country-search" placeholder="Search countries..." autocomplete="off" />
+        </div>
+        <div class="country-menu-tabs">
+          <button class="country-menu-tab active">World</button>
+          <!-- Future: <button class="country-menu-tab">Regions</button> -->
+        </div>
+        <div class="country-menu-legend">
+          <span><i class="fa-solid fa-flag"></i> Visited</span>
+          <span><i class="fa-solid fa-heart"></i> Want to visit</span>
+        </div>
+        <div class="country-list" id="country-list"></div>
+        <button id="close-country-menu-btn" class="country-menu-close-btn">Close</button>
       </div>
     </div>
     <div id="auth-container">
@@ -53,22 +65,31 @@
   <div id="profile-modal" class="hidden">
     <div class="profile-modal-content">
       <h2>Profile</h2>
-      <form id="change-username-form">
-        <label>Change Username:</label>
-        <input type="text" id="new-username" required />
-        <button type="submit">Change Username</button>
-      </form>
-      <form id="change-password-form">
-        <label>Change Password:</label>
-        <input type="password" id="new-password" required />
-        <button type="submit">Change Password</button>
-      </form>
-      <button id="clear-map-btn" type="button">Clear Map</button>
-      <button id="logout-btn" class="logout-btn" type="button">Logout</button>
-      <button id="delete-account-btn" type="button" style="background:#d32f2f;color:#fff;margin-top:8px;">Delete
-        Account</button>
+      <div class="profile-section">
+        <form id="change-username-form">
+          <div class="profile-section-header">Change Username</div>
+          <input type="text" id="new-username" required />
+          <button type="submit">Change Username</button>
+        </form>
+      </div>
+      <hr class="profile-divider">
+      <div class="profile-section">
+        <form id="change-password-form">
+          <div class="profile-section-header">Change Password</div>
+          <input type="password" id="new-password" required />
+          <button type="submit">Change Password</button>
+        </form>
+      </div>
+      <hr class="profile-divider">
+      <div class="profile-section profile-actions">
+        <button id="clear-map-btn" type="button">Clear Map</button>
+        <button id="logout-btn" class="logout-btn" type="button">Logout</button>
+      </div>
+      <div class="profile-section profile-danger">
+        <button id="delete-account-btn" type="button" style="background:#d32f2f;color:#fff;margin-top:8px;">Delete Account</button>
+      </div>
       <div id="profile-message"></div>
-      <button id="close-profile-btn" type="button">Close</button>
+      <button id="close-profile-btn" type="button" class="profile-close-btn">Close</button>
     </div>
   </div>
 <div id="passport-modal" class="hidden">

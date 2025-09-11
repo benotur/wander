@@ -15,7 +15,6 @@ const db = firebase.database();
 
 let visitedA3Codes = [];
 let wishA3Codes = [];
-let livedA3Codes = [];
 let lookupMap = {};
 let currentUser = null;
 let mapLoaded = false;
@@ -24,8 +23,7 @@ let currentCategory = "visited"; // Default tab
 
 let activeFilters = {
   visited: true,
-  wish: true,
-  lived: true
+  wish: true
 };
 
 // --- ISO A2 to A3 mapping for official countries ---
@@ -524,21 +522,25 @@ const continents = [
   });
 })();
 
-// --- Menu modal open/close logic ---
-const openMenuBtn = document.getElementById("open-menu-btn");
-const menuModal = document.getElementById("menu-modal");
-const closeMenuBtn = document.getElementById("close-menu-btn");
+// --- New Country Menu Modal Logic ---
+const countryMenuModal = document.getElementById("country-menu-modal");
+const openCountryMenuBtn = document.getElementById("open-menu-btn");
+const closeCountryMenuBtn = document.getElementById("close-country-menu-btn");
 
-if (openMenuBtn && menuModal) {
-  openMenuBtn.onclick = () => {
-    menuModal.classList.remove("hidden");
+if (openCountryMenuBtn && countryMenuModal) {
+  openCountryMenuBtn.onclick = () => {
+    countryMenuModal.classList.remove("hidden");
   };
 }
-if (closeMenuBtn && menuModal) {
-  closeMenuBtn.onclick = () => {
-    menuModal.classList.add("hidden");
+if (closeCountryMenuBtn && countryMenuModal) {
+  closeCountryMenuBtn.onclick = () => {
+    countryMenuModal.classList.add("hidden");
   };
 }
+// Optional: close on background click
+countryMenuModal && countryMenuModal.addEventListener("mousedown", (e) => {
+  if (e.target === countryMenuModal) countryMenuModal.classList.add("hidden");
+});
 
 // --- Auth logic ---
 function saveUserToLocal(user) {
@@ -717,9 +719,8 @@ map.on('load', () => {
     paint: {
       'fill-color': [
         'case',
-        ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', livedA3Codes]], '#ff9800',
-        ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', visitedA3Codes]], '#e0e0e0',
-        ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', wishA3Codes]], '#757575',
+        ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', visitedA3Codes]], '#43a047', // green
+        ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', wishA3Codes]], '#1976d2', // blue
         'rgba(0,0,0,0.08)'
       ],
       'fill-outline-color': '#222',
@@ -750,7 +751,8 @@ function addFlagMarkers() {
   }
   window._flagMarkers = [];
 
-  const codesToShow = [...new Set([...visitedA3Codes, ...livedA3Codes])];
+  // Only show flags for visited countries
+  const codesToShow = [...new Set(visitedA3Codes)];
 
   codesToShow.forEach(a3 => {
     const a2 = Object.keys(isoA2toA3).find(k => isoA2toA3[k] === a3);
@@ -799,15 +801,13 @@ map.on('zoomend', addFlagMarkers);
 function updateMapColors() {
   if (!mapLoaded) return;
 
-  const lived = activeFilters.lived ? livedA3Codes : [];
   const visited = activeFilters.visited ? visitedA3Codes : [];
   const wish = activeFilters.wish ? wishA3Codes : [];
 
   map.setPaintProperty('country-highlight', 'fill-color', [
     'case',
-    ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', lived]], '#ff9800',
-    ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', visited]], '#e0e0e0',
-    ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', wish]], '#757575',
+    ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', visited]], '#43a047', // green
+    ['in', ['get', 'iso_3166_1_alpha_3'], ['literal', wish]], '#1976d2', // blue
     'rgba(0,0,0,0.08)'
   ]);
 
@@ -815,7 +815,125 @@ function updateMapColors() {
   map.once('idle', addFlagMarkers);
 }
 
-// --- Load visited/wish/lived countries for current user ---
+// --- Render new country menu (grouped by continent, with icons) ---
+function getFlagImgTag(a2) {
+  if (!a2) return "";
+  return `<img class="country-flag-img" src="https://flagcdn.com/${a2.toLowerCase()}.svg" height="18" alt="" loading="lazy" />`;
+}
+
+function renderCountryMenu() {
+  const countryList = document.getElementById("country-list");
+  if (!countryList) return;
+  countryList.innerHTML = "";
+
+  continents.forEach(cont => {
+    // Continent header
+    const contHeader = document.createElement("div");
+    contHeader.style.fontWeight = "bold";
+    contHeader.style.fontSize = "1.08em";
+    contHeader.style.margin = "18px 0 6px 0";
+    contHeader.textContent = cont.name;
+    countryList.appendChild(contHeader);
+
+    // Sort countries alphabetically
+    const sortedCountries = [...cont.countries].sort((a, b) => a.name.localeCompare(b.name));
+    sortedCountries.forEach(country => {
+      const a3 = toA3(country.code);
+      const row = document.createElement("div");
+      row.className = "country-list-row";
+
+      // Name with flag
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "country-list-name";
+      nameDiv.innerHTML = `${getFlagImgTag(country.code)} ${country.name}`;
+      row.appendChild(nameDiv);
+
+      // Actions: V and W buttons
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "country-list-actions";
+
+      // Visited button
+      const vBtn = document.createElement("button");
+      vBtn.className = "vw-circle-btn v-btn" + (visitedA3Codes.includes(a3) ? " active" : "");
+      vBtn.title = visitedA3Codes.includes(a3) ? "Unmark as visited" : "Mark as visited";
+      vBtn.textContent = "V";
+      vBtn.onclick = () => toggleCountry(country.code);
+      actionsDiv.appendChild(vBtn);
+
+      // Wish button
+      const wBtn = document.createElement("button");
+      wBtn.className = "vw-circle-btn w-btn" + (wishA3Codes.includes(a3) ? " active" : "");
+      wBtn.title = wishA3Codes.includes(a3) ? "Unmark as wish" : "Mark as wish";
+      wBtn.textContent = "W";
+      wBtn.onclick = () => toggleWish(country.code);
+      actionsDiv.appendChild(wBtn);
+
+      row.appendChild(actionsDiv);
+      countryList.appendChild(row);
+    });
+  });
+}
+
+// --- Hook up menu rendering to data changes ---
+function updateCountryMenuOnData() {
+  renderCountryMenu();
+}
+window._updateCountryMenu = updateCountryMenuOnData;
+
+// --- Search filter ---
+const countrySearchInput = document.getElementById("country-search");
+if (countrySearchInput) {
+  countrySearchInput.addEventListener("input", function () {
+    renderCountryMenuWithSearch(this.value);
+  });
+}
+function renderCountryMenuWithSearch(query) {
+  const countryList = document.getElementById("country-list");
+  if (!countryList) return;
+  countryList.innerHTML = "";
+  const q = (query || "").toLowerCase();
+  continents.forEach(cont => {
+    // Filter countries by search
+    const filtered = cont.countries.filter(c => c.name.toLowerCase().includes(q));
+    if (!filtered.length) return;
+    // Continent header
+    const contHeader = document.createElement("div");
+    contHeader.style.fontWeight = "bold";
+    contHeader.style.fontSize = "1.08em";
+    contHeader.style.margin = "18px 0 6px 0";
+    contHeader.textContent = cont.name;
+    countryList.appendChild(contHeader);
+    // Sort filtered countries
+    const sortedCountries = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+    sortedCountries.forEach(country => {
+      const a3 = toA3(country.code);
+      const row = document.createElement("div");
+      row.className = "country-list-row";
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "country-list-name";
+      nameDiv.innerHTML = `${getFlagImgTag(country.code)} ${country.name}`;
+      row.appendChild(nameDiv);
+      const actionsDiv = document.createElement("div");
+      actionsDiv.className = "country-list-actions";
+      const vBtn = document.createElement("button");
+      vBtn.className = "vw-circle-btn v-btn" + (visitedA3Codes.includes(a3) ? " active" : "");
+      vBtn.title = visitedA3Codes.includes(a3) ? "Unmark as visited" : "Mark as visited";
+      vBtn.textContent = "V";
+      vBtn.onclick = () => toggleCountry(country.code);
+      actionsDiv.appendChild(vBtn);
+      const wBtn = document.createElement("button");
+      wBtn.className = "vw-circle-btn w-btn" + (wishA3Codes.includes(a3) ? " active" : "");
+      wBtn.title = wishA3Codes.includes(a3) ? "Unmark as wish" : "Mark as wish";
+      wBtn.textContent = "W";
+      wBtn.onclick = () => toggleWish(country.code);
+      actionsDiv.appendChild(wBtn);
+      row.appendChild(actionsDiv);
+      countryList.appendChild(row);
+    });
+  });
+}
+
+// --- Update menu on data change ---
 function loadVisited() {
   if (!currentUser) return;
   db.ref("users/" + currentUser.id + "/visited").on("value", (snapshot) => {
@@ -824,23 +942,14 @@ function loadVisited() {
     window.visitedCodes = rawVisited;
     updateMapColors();
     saveTravelStats();
-    if (window._updateCategoryMenu) window._updateCategoryMenu();
+    if (window._updateCountryMenu) window._updateCountryMenu();
   });
-
   db.ref("users/" + currentUser.id + "/wish").on("value", (snapshot) => {
     const rawWish = snapshot.val() || [];
     wishA3Codes = rawWish.map(toA3).filter(Boolean);
     window.wishCodes = rawWish;
     updateMapColors();
-    if (window._updateCategoryMenu) window._updateCategoryMenu();
-  });
-
-  db.ref("users/" + currentUser.id + "/lived").on("value", (snapshot) => {
-    const rawLived = snapshot.val() || [];
-    livedA3Codes = rawLived.map(toA3).filter(Boolean);
-    window.livedCodes = rawLived;
-    updateMapColors();
-    if (window._updateCategoryMenu) window._updateCategoryMenu();
+    if (window._updateCountryMenu) window._updateCountryMenu();
   });
 }
 
@@ -859,28 +968,34 @@ function renderContinentMenu() {
 
   continentList.innerHTML = "";
 
-  const categories = [
-    { key: "lived", label: "Lived", icon: '<i class="fi fi-sr-house-chimney"></i>' },
-    { key: "visited", label: "Visited", icon: '<i class="fi fi-sr-marker"></i>' },
-    { key: "wish", label: "Wish", icon: '<i class="fi fi-sr-heart"></i>' }
-  ];
+  // Toggle buttons for Visited and Wish
+  const toggleBar = document.createElement("div");
+  toggleBar.style.display = "flex";
+  toggleBar.style.justifyContent = "center";
+  toggleBar.style.gap = "12px";
+  toggleBar.style.marginBottom = "1.2em";
 
-  const tabBar = document.createElement("div");
-  tabBar.className = "country-category-tabs";
-  categories.forEach(cat => {
-    const tab = document.createElement("button");
-    tab.className = "country-category-tab";
-    tab.innerHTML = `${cat.icon} ${cat.label}`;
-    tab.dataset.cat = cat.key;
-    if (cat.key === currentCategory) tab.classList.add("active");
-    tab.onclick = () => {
-      // Do NOT clear scroll positions when changing tab
-      currentCategory = cat.key;
-      renderContinentMenu();
-    };
-    tabBar.appendChild(tab);
-  });
-  continentList.appendChild(tabBar);
+  const visitedBtn = document.createElement("button");
+  visitedBtn.textContent = "Visited";
+  visitedBtn.className = "toggle-category-btn";
+  if (currentCategory === "visited") visitedBtn.classList.add("active");
+  visitedBtn.onclick = () => {
+    currentCategory = "visited";
+    renderContinentMenu();
+  };
+  toggleBar.appendChild(visitedBtn);
+
+  const wishBtn = document.createElement("button");
+  wishBtn.textContent = "Wish";
+  wishBtn.className = "toggle-category-btn";
+  if (currentCategory === "wish") wishBtn.classList.add("active");
+  wishBtn.onclick = () => {
+    currentCategory = "wish";
+    renderContinentMenu();
+  };
+  toggleBar.appendChild(wishBtn);
+
+  continentList.appendChild(toggleBar);
 
   const categoryMenuContainer = document.createElement("div");
   categoryMenuContainer.id = "category-menu-container";
@@ -916,11 +1031,6 @@ function renderContinentMenu() {
           toggleWish(country.code, btn);
         };
         if (wishA3Codes.includes(toA3(country.code))) btn.classList.add("wished");
-      } else if (currentCategory === "lived") {
-        btn.onclick = () => {
-          toggleLived(country.code, btn);
-        };
-        if (livedA3Codes.includes(toA3(country.code))) btn.classList.add("lived");
       }
 
       menu.appendChild(btn);
@@ -1028,22 +1138,6 @@ function toggleWish(code, btn) {
     });
 }
 
-function toggleLived(code, btn) {
-  if (!currentUser) return;
-  saveCurrentMenuScroll(); // <-- Save scroll before DB update
-  db.ref("users/" + currentUser.id + "/lived")
-    .once("value")
-    .then((snapshot) => {
-      let lived = snapshot.val() || [];
-      if (lived.includes(code)) {
-        lived = lived.filter((c) => c !== code);
-      } else {
-        lived.push(code);
-      }
-      db.ref("users/" + currentUser.id + "/lived").set(lived);
-    });
-}
-
 // --- Profile modal logic ---
 const profileBtn = document.getElementById("profile-btn");
 const profileModal = document.getElementById("profile-modal");
@@ -1109,7 +1203,6 @@ if (clearMapBtn) {
     if (!currentUser) return;
     await db.ref("users/" + currentUser.id + "/visited").set([]);
     await db.ref("users/" + currentUser.id + "/wish").set([]);
-    await db.ref("users/" + currentUser.id + "/lived").set([]);
     profileMessage.textContent = "Map cleared!";
   };
 }
