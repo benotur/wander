@@ -1,0 +1,20 @@
+- scrollable ui
+- new design
+- profile
+- world filters
+- passport
+- currency converter
+- timezone comparison
+- weather forecast
+- regions
+- cities
+- distance calculator
+- trip planner
+- center map
+- gps location point
+- pics uploader
+- social platform (chat, etc)
+- bucket list
+- polls (where should i go next)
+- language survival kit
+- spotify embed
