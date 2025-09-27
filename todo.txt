@@ -13,8 +13,13 @@
 - center map
 - gps location point
 - pics uploader
+- reviews
 - social platform (chat, etc)
 - bucket list
 - polls (where should i go next)
 - language survival kit
 - spotify embed
+- what to know before you go
+- must see landmarks
+- must try food
+- utilities (plug type, unit converter, emergency numbers, etc)
